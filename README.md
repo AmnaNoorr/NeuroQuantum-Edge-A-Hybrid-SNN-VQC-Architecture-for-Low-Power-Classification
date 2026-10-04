@@ -63,7 +63,7 @@ Use the same preprocessing, stratified split, seed, and reporting metrics for al
 - [x] Repository and configuration scaffold
 - [x] Deterministic seed helper and test coverage
 - [ ] CSV loading and validation
-- [ ] Classical MLP implementation
+- [x] Classical MLP and logistic-regression baseline implementation
 - [ ] snnTorch SNN implementation
 - [ ] PennyLane hybrid SNN + VQC implementation
 - [ ] Training, evaluation, and Colab experiment notebooks

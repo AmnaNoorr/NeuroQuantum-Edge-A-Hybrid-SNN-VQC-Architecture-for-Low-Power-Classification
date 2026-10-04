@@ -1,5 +1,6 @@
-"""Model package reserved for the MLP, SNN, and hybrid SNN + VQC architectures.
+"""Classical and neuromorphic model implementations for NeuroQuantum-Edge."""
 
-Implementations are deliberately deferred until the data pipeline and baseline
-evaluation protocol have been finalized.
-"""
+from .baselines import LogisticRegressionBaseline
+from .mlp import MLPClassifier
+
+__all__ = ["LogisticRegressionBaseline", "MLPClassifier"]
