@@ -53,12 +53,3 @@ Every eventual training notebook or script should call `src.utils.set_seed` befo
 
 Use the same preprocessing, stratified split, seed, and reporting metrics for all three configurations. Report at least accuracy, precision, recall, F1, ROC-AUC, a confusion matrix, parameter count, and an inference-cost proxy appropriate to the target edge device.
 
-## Status
-
-- [x] Repository and configuration scaffold
-- [x] Deterministic seed helper and test coverage
-- [ ] CSV loading and validation
-- [ ] Classical MLP implementation
-- [ ] snnTorch SNN implementation
-- [ ] PennyLane hybrid SNN + VQC implementation
-- [ ] Training, evaluation, and Colab experiment notebooks
