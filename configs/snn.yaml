@@ -19,6 +19,10 @@ model:
   timesteps: 25
   neuron: leaky
   beta: 0.90
+  encoding: rate
+  delta_threshold: 0.10
+  surrogate_slope: 25.0
+  readout: spike_count
 
 training:
   batch_size: 64
