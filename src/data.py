@@ -148,7 +148,10 @@ def load_data_config(config_path: str | Path) -> ECGDataConfig:
 
 
 def create_ecg_dataloaders(
-    config_path: str | Path, *, results_dir: str | Path | None = None
+    config_path: str | Path,
+    *,
+    results_dir: str | Path | None = None,
+    seed: int | None = None,
 ) -> ECGDataLoaders:
     """Load, stratify, scale, and package one ECG experiment dataset.
 
@@ -161,14 +164,17 @@ def create_ecg_dataloaders(
         config_path: Path to an experiment YAML file containing ``data.csv_path``.
         results_dir: Optional output directory override. Defaults to the
             project-level ``results/`` directory.
+        seed: Optional seed override for a multi-seed experiment run. When
+            omitted, uses ``experiment.seed`` from the YAML configuration.
 
     Returns:
         A bundle containing train, validation, and test PyTorch DataLoaders.
     """
     config_file = Path(config_path)
     config = load_data_config(config_file)
+    effective_seed = config.seed if seed is None else _non_negative_int(seed, "seed")
     features, labels, label_column, has_header = _read_ecg_csv(config.dataset)
-    split_indices = _make_stratified_split_indices(labels, config.seed)
+    split_indices = _make_stratified_split_indices(labels, effective_seed)
 
     train_indices = np.asarray(split_indices["train"], dtype=np.int64)
     val_indices = np.asarray(split_indices["val"], dtype=np.int64)
@@ -188,13 +194,13 @@ def create_ecg_dataloaders(
     _save_split_indices(
         output_dir / "splits.json",
         split_indices=split_indices,
-        seed=config.seed,
+        seed=effective_seed,
         csv_path=config.dataset.csv_path,
         label_column=label_column,
         has_header=has_header,
     )
 
-    generator = torch.Generator().manual_seed(config.seed)
+    generator = torch.Generator().manual_seed(effective_seed)
     worker_init_fn = _seed_worker if config.num_workers else None
     return ECGDataLoaders(
         train=DataLoader(
