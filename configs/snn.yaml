@@ -5,11 +5,10 @@ experiment:
 
 data:
   csv_path: data/ecg.csv
-  label_column: label
+  header: auto
+  label_column: auto
   feature_count: 140
-  test_size: 0.20
-  validation_size: 0.10
-  stratify: true
+  split: [0.70, 0.15, 0.15]
   standardize_features: true
 
 model:

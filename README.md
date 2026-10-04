@@ -15,7 +15,12 @@ Provide one CSV file with 141 columns:
 - 140 floating-point ECG features per row;
 - one binary target column with `0` for normal and `1` for abnormal.
 
-The starter configurations assume the target is named `label`. Change `data.label_column` in the relevant YAML file if your data uses a different name. Place the file at `data/ecg.csv` when running the experiments. Dataset files are intentionally ignored by Git.
+The loader uses `data.header: auto` and `data.label_column: auto` to detect a
+header and the unique column containing only both binary values, rather than
+assuming a target name or position. If a CSV is ambiguous, set
+`data.label_column` to a header name or zero-based column index explicitly.
+Place the file at `data/ecg.csv` when running the experiments. Dataset files
+are intentionally ignored by Git.
 
 ## Repository layout
 
@@ -47,7 +52,7 @@ tests/                  # lightweight unit tests
 
 4. Select a GPU runtime when one is available. The project will remain device-agnostic, although all experiment runs are designed to be launched from Colab.
 
-Every eventual training notebook or script should call `src.utils.set_seed` before creating splits, data loaders, or models. The default seed is recorded in each experiment configuration.
+Every eventual training notebook or script should call `src.utils.set_seed` before creating splits, data loaders, or models. The default seed is recorded in each experiment configuration. Use `src.data.create_ecg_dataloaders(config_path)` to create the shared, stratified 70/15/15 DataLoaders; it fits feature scaling on training rows only and records the resulting row indices in `results/splits.json`.
 
 ## Experiment plan
 
