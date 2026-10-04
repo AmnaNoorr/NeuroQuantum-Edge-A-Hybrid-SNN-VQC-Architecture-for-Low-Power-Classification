@@ -18,10 +18,13 @@ model:
   snn_timesteps: 25
   neuron: leaky
   beta: 0.90
+  encoding: rate
+  delta_threshold: 0.10
+  surrogate_slope: 25.0
   vqc:
     backend: default.qubit
-    qubits: 4
-    layers: 2
+    n_qubits: 4
+    n_layers: 2
     output_classes: 2
 
 training:

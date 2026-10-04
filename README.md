@@ -6,7 +6,8 @@ Research scaffold for comparing three binary ECG classifiers on the same data sp
 - a pure spiking neural network (SNN) built with [snnTorch](https://snntorch.readthedocs.io/);
 - a hybrid SNN with a PennyLane variational quantum circuit (VQC) head.
 
-Model implementations are intentionally not included yet. This repository establishes a reproducible layout, shared experiment settings, and a Colab-ready environment first.
+The classical MLP, pure SNN, and hybrid SNN + VQC model modules are available.
+Training and evaluation entry points remain the next implementation milestone.
 
 ## Dataset contract
 
