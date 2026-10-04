@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from typing import Literal, TypeAlias
+from .snn import SpikeEncoding, delta_encode, direct_encode, rate_encode
 
 import pennylane as qml
 import snntorch as snn
@@ -39,7 +40,7 @@ class SNNFeatureExtractor(nn.Module):
         hidden_features: Sequence[int] = (128, 64),
         timesteps: int = 25,
         beta: float = 0.90,
-        encoding: SpikeEncoding = "rate",
+        encoding: SpikeEncoding = "direct",
         delta_threshold: float = 0.10,
         surrogate_slope: float = 25.0,
         feature_readout: FeatureReadout = "spike_count",
@@ -50,8 +51,8 @@ class SNNFeatureExtractor(nn.Module):
         _validate_positive_int(timesteps, "timesteps")
         if not 0.0 < beta <= 1.0:
             raise ValueError("beta must be in the interval (0.0, 1.0]")
-        if encoding not in ("rate", "delta"):
-            raise ValueError("encoding must be 'rate' or 'delta'")
+        if encoding not in ("direct", "rate", "delta"):
+            raise ValueError("encoding must be 'direct', 'rate' or 'delta'")
         if delta_threshold <= 0.0:
             raise ValueError("delta_threshold must be greater than zero")
         if surrogate_slope <= 0.0:
@@ -72,7 +73,7 @@ class SNNFeatureExtractor(nn.Module):
         self.feature_readout: FeatureReadout = feature_readout
         self.output_features = widths[-1]
 
-        encoded_features = 1 if encoding == "rate" else 2
+        encoded_features = 2 if encoding == "delta" else input_features
         spike_gradient = surrogate.fast_sigmoid(slope=surrogate_slope)
         self.linears = nn.ModuleList()
         self.neurons = nn.ModuleList()
@@ -108,7 +109,9 @@ class SNNFeatureExtractor(nn.Module):
         return final_membranes[-1]
 
     def _encode(self, inputs: Tensor) -> Tensor:
-        """Apply the configured one-dimensional ECG spike encoding."""
+        """Apply the configured spike encoding."""
+        if self.encoding == "direct":
+            return direct_encode(inputs, self.timesteps)
         if self.encoding == "rate":
             return rate_encode(inputs, self.timesteps)
         return delta_encode(inputs, self.timesteps, self.delta_threshold)
@@ -187,7 +190,7 @@ class HybridSNNVQCClassifier(nn.Module):
     def forward(self, inputs: Tensor) -> Tensor:
         """Return two-class logits from SNN features and VQC expectations."""
         snn_features = self.snn_features(inputs)
-        qubit_angles = self.feature_reduction(snn_features)
+        qubit_angles = torch.pi * torch.tanh(self.feature_reduction(snn_features) / self.snn_features.timesteps)
         quantum_features = self.quantum_layer(qubit_angles)
         if quantum_features.ndim == 1:
             quantum_features = quantum_features.unsqueeze(0)

@@ -18,7 +18,7 @@ model:
   snn_timesteps: 25
   neuron: leaky
   beta: 0.90
-  encoding: rate
+  encoding: direct
   delta_threshold: 0.10
   surrogate_slope: 25.0
   vqc:
