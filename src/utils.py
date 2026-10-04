@@ -5,6 +5,24 @@ import random
 
 import numpy as np
 import torch
+from torch import nn
+
+
+def count_params(model: nn.Module, *, trainable_only: bool = True) -> int:
+    """Count scalar parameters in a PyTorch module.
+
+    Args:
+        model: PyTorch module whose parameters should be counted.
+        trainable_only: When ``True`` (the default), exclude frozen parameters.
+
+    Returns:
+        Total number of scalar parameters matching the requested filter.
+    """
+    return sum(
+        parameter.numel()
+        for parameter in model.parameters()
+        if not trainable_only or parameter.requires_grad
+    )
 
 
 def set_seed(seed: int, *, deterministic: bool = True) -> None:
