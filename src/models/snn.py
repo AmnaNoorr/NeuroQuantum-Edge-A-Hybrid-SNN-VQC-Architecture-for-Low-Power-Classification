@@ -17,8 +17,7 @@ import torch
 from torch import Tensor, nn
 from torch.nn import functional as functional
 
-
-SpikeEncoding: TypeAlias = Literal["rate", "delta"]
+SpikeEncoding: TypeAlias = Literal["direct", "rate", "delta"]
 Readout: TypeAlias = Literal["spike_count", "membrane"]
 
 
@@ -42,20 +41,20 @@ class SNNForwardResult:
     mean_spikes_per_neuron_per_sample: Tensor
 
 
+def direct_encode(signal: Tensor, timesteps: int) -> Tensor:
+    """Repeat the real-valued ECG at every timestep: [timesteps, batch, features]."""
+    return signal.unsqueeze(0).expand(timesteps, -1, -1)
+
+
 def rate_encode(signal: Tensor, timesteps: int) -> Tensor:
-    """Encode a batch of 1D ECG signals as stochastic rate-coded spikes.
+    """Per-feature Bernoulli spikes with sigmoid(amplitude) as firing probability.
 
-    Standardized ECG samples may be negative, so a sigmoid maps every resampled
-    amplitude to a valid Bernoulli probability. The returned tensor has shape
-    ``[timesteps, batch, 1]``.
-
-    Args:
-        signal: ECG batch with shape ``[batch, input_features]``.
-        timesteps: Number of SNN simulation steps.
+    Returns [timesteps, batch, features]; every feature is kept and fresh spikes
+    are drawn at each timestep.
     """
-    waveform = _resample_signal(signal, timesteps)
-    probabilities = torch.sigmoid(waveform)
-    return torch.bernoulli(probabilities).transpose(0, 1).unsqueeze(-1)
+    probabilities = torch.sigmoid(signal)
+    expanded = probabilities.unsqueeze(0).expand(timesteps, -1, -1)
+    return torch.bernoulli(expanded)
 
 
 def delta_encode(signal: Tensor, timesteps: int, threshold: float) -> Tensor:
@@ -130,7 +129,7 @@ class SpikingECGClassifier(nn.Module):
         output_classes: int = 2,
         timesteps: int = 25,
         beta: float = 0.90,
-        encoding: SpikeEncoding = "rate",
+        encoding: SpikeEncoding = "direct",
         delta_threshold: float = 0.10,
         surrogate_slope: float = 25.0,
         readout: Readout = "spike_count",
@@ -142,8 +141,8 @@ class SpikingECGClassifier(nn.Module):
         _validate_positive_int(timesteps, "timesteps")
         if not 0.0 < beta <= 1.0:
             raise ValueError("beta must be in the interval (0.0, 1.0]")
-        if encoding not in ("rate", "delta"):
-            raise ValueError("encoding must be 'rate' or 'delta'")
+        if encoding not in ("direct", "rate", "delta"):
+            raise ValueError("encoding must be 'direct', 'rate' or 'delta'")
         if delta_threshold <= 0.0:
             raise ValueError("delta_threshold must be greater than zero")
         if surrogate_slope <= 0.0:
@@ -161,7 +160,7 @@ class SpikingECGClassifier(nn.Module):
         self.delta_threshold = delta_threshold
         self.readout: Readout = readout
 
-        encoded_features = 1 if encoding == "rate" else 2
+        encoded_features = 2 if encoding == "delta" else input_features
         spike_gradient = surrogate.fast_sigmoid(slope=surrogate_slope)
         self.hidden_linears = nn.ModuleList()
         self.hidden_neurons = nn.ModuleList()
@@ -236,7 +235,9 @@ class SpikingECGClassifier(nn.Module):
         )
 
     def _encode(self, inputs: Tensor) -> Tensor:
-        """Apply the configured rate or delta spike encoder."""
+        """Apply the configured spike encoder."""
+        if self.encoding == "direct":
+            return direct_encode(inputs, self.timesteps)
         if self.encoding == "rate":
             return rate_encode(inputs, self.timesteps)
         return delta_encode(inputs, self.timesteps, self.delta_threshold)
