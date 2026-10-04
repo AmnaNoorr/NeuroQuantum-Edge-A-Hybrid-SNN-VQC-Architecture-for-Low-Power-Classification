@@ -7,7 +7,7 @@ Research scaffold for comparing three binary ECG classifiers on the same data sp
 - a hybrid SNN with a PennyLane variational quantum circuit (VQC) head.
 
 The classical MLP, pure SNN, and hybrid SNN + VQC model modules are available.
-Training and evaluation entry points remain the next implementation milestone.
+Training evaluates the held-out test split and writes one JSON report per seed.
 
 ## Dataset contract
 
@@ -29,8 +29,8 @@ are intentionally ignored by Git.
 src/
   data.py              # dataset schema and future loading entry point
   models/               # reserved for MLP, SNN, and hybrid model modules
-  train.py              # training entry point placeholder
-  evaluate.py           # evaluation entry point placeholder
+  train.py              # configuration-driven training and test evaluation
+  evaluate.py           # shared evaluation metrics and timing utilities
   utils.py              # reproducibility helpers
 configs/
   classical_mlp.yaml
@@ -39,6 +39,22 @@ configs/
 results/                # metrics, figures, and checkpoints produced by runs
 notebooks/              # Colab notebooks and notebook notes
 tests/                  # lightweight unit tests
+scripts/                # result aggregation utilities
+```
+
+## Running experiments
+
+Run one seed, or use `--smoke` for 200 training samples and one epoch:
+
+```bash
+python -m src.train --config configs/classical_mlp.yaml --seed 42 --smoke
+```
+
+Reports are saved under `results/{experiment}/seed_{seed}.json`. Aggregate all
+available seeds into a Markdown table with:
+
+```bash
+python scripts/aggregate_results.py --results-dir results --output results/summary.md
 ```
 
 ## Colab setup
