@@ -1,0 +1,29 @@
+experiment:
+  name: classical_mlp
+  seed: 42
+  device: cuda
+
+data:
+  csv_path: data/ecg.csv
+  label_column: label
+  feature_count: 140
+  test_size: 0.20
+  validation_size: 0.10
+  stratify: true
+  standardize_features: true
+
+model:
+  family: mlp
+  input_features: 140
+  hidden_features: [128, 64]
+  output_classes: 2
+  dropout: 0.20
+
+training:
+  batch_size: 64
+  epochs: 50
+  learning_rate: 0.001
+  weight_decay: 0.0001
+
+evaluation:
+  metrics: [accuracy, precision, recall, f1, roc_auc]

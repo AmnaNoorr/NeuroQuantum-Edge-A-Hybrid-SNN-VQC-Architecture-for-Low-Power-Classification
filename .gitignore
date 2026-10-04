@@ -1,0 +1,23 @@
+# Local datasets
+data/
+*.csv
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and local configuration
+.venv/
+venv/
+.env
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Generated experiment artifacts
+results/**/*.pt
+results/**/*.pth
+results/**/*.ckpt

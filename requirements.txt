@@ -1,0 +1,15 @@
+# Core training and data tooling
+torch>=2.2
+numpy>=1.26
+pandas>=2.1
+scikit-learn>=1.4
+PyYAML>=6.0
+
+# Model families to be implemented
+snntorch>=0.8
+pennylane>=0.36
+
+# Evaluation, visualization, and tests
+matplotlib>=3.8
+seaborn>=0.13
+pytest>=8.0
